@@ -1,0 +1,73 @@
+.crisp-client { line-height: 1; font-size: medium !important; direction: ltr !important; text-align: left !important; color: rgb(var(--crisp-color-base-black-normal)) !important; font-style: normal !important; font-weight: 400 !important; text-decoration: none !important; list-style-type: disc !important; }
+.crisp-client *, .crisp-client ::before, .crisp-client ::after { height: auto; line-height: inherit; max-height: none; min-height: 0px; border: medium none currentcolor !important; inset: auto !important; clear: none !important; clip: auto !important; color: inherit !important; counter-increment: none !important; counter-reset: none !important; cursor: auto !important; direction: inherit !important; display: inline !important; float: none !important; font-family: inherit !important; font-size: inherit !important; font-style: inherit !important; font-variant: normal !important; font-weight: inherit !important; letter-spacing: normal !important; list-style-type: inherit !important; list-style-position: outside !important; list-style-image: none !important; margin: 0px !important; max-width: none !important; min-width: 0px !important; padding: 0px !important; position: static !important; quotes: "" "" !important; table-layout: auto !important; text-align: inherit !important; text-decoration: inherit !important; text-indent: 0px !important; text-transform: none !important; text-rendering: auto !important; unicode-bidi: normal !important; vertical-align: baseline !important; visibility: inherit !important; white-space: normal !important; width: auto !important; word-spacing: normal !important; z-index: auto !important; border-radius: 0px !important; box-shadow: none !important; box-sizing: content-box !important; columns: auto !important; column-gap: normal !important; column-rule: medium none rgb(var(--crisp-color-base-black-normal)) !important; font-feature-settings: normal !important; overflow: visible !important; perspective: none !important; perspective-origin: 50% 50% !important; backface-visibility: visible !important; text-shadow: none !important; transition: all !important; word-break: normal !important; hyphens: manual !important; -webkit-tap-highlight-color: rgba(var(--crisp-color-base-black-normal),0) !important; -webkit-text-fill-color: currentcolor !important; hyphenate-character: "‐" !important; }
+.crisp-client, .crisp-client div { display: block !important; }
+.crisp-client { --crisp-color-base-white-normal: 255,255,255; --crisp-color-base-white-dark: 255,255,255; --crisp-color-base-black-light: 28,41,59; --crisp-color-base-black-normal: 0,0,0; --crisp-color-base-blue-ultra-light: 224,237,255; --crisp-color-base-blue-light: 89,144,226; --crisp-color-base-grey-ultra-light: 240,242,245; --crisp-color-base-grey-light: 211,221,230; --crisp-color-base-grey-normal: 102,120,138; --crisp-color-base-grey-dark: 55,81,108; --crisp-color-base-grey-ultra-dark: 40,64,89; --crisp-color-base-red-ultra-light: 255,242,243; --crisp-color-base-red-light: 255,220,224; --crisp-color-base-red-normal: 238,51,75; --crisp-color-base-red-dark: 199,10,34; --crisp-color-base-red-ultra-dark: 107,12,0; --crisp-color-base-green-normal: 78,206,61; --crisp-color-base-green-dark: 34,178,15; --crisp-color-base-green-ultra-dark: 7,58,0; --crisp-color-base-orange-dark: 225,105,0; --crisp-color-base-yellow-ultra-light: 255,246,208; --crisp-color-base-yellow-light: 255,244,127; --crisp-color-base-yellow-normal: 245,201,12; --crisp-color-base-white-normal-fixed: 255,255,255; --crisp-color-base-black-normal-fixed: 0,0,0; --crisp-color-base-black-light-fixed: 28,41,59; --crisp-color-text-black-normal: 28,41,59; --crisp-color-text-white-normal: 255,255,255; --crisp-color-text-grey-normal: 102,120,138; --crisp-color-text-grey-dark: 55,81,108; --crisp-color-text-black-normal-fixed: 28,41,59; --crisp-color-text-white-normal-fixed: 255,255,255; --crisp-color-separator-normal: 233,238,243; --crisp-color-separator-dark: 211,221,230; --crisp-color-placeholder-normal: 102,120,138; --crisp-color-placeholder-disabled: 211,221,230; --crisp-color-shadow-normal: 0,0,0; --crisp-color-background-ultra-light: 247,249,252; --crisp-color-background-light: 237,240,246; --crisp-color-background-locker: 28,41,59; }
+.crisp-client { --crisp-customization-container-index: 1000000; --crisp-customization-default-button-horizontal: 0px; --crisp-customization-default-button-vertical: 0px; --crisp-customization-mobile-button-horizontal: 0px; --crisp-customization-mobile-button-vertical: 0px; }
+.crisp-client .cc-yv368 { --crisp-customization-button-horizontal: var(--crisp-customization-default-button-horizontal); --crisp-customization-button-vertical: var(--crisp-customization-default-button-vertical); }
+@keyframes cc-1gl01 { 
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes cc-fxpn5 { 
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes cc-152xo { 
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes cc-1bvud { 
+  0% { opacity: 0; transform: scale3d(0.6, 0.6, 0.6); }
+  80% { opacity: 0; transform: scale3d(0.9, 0.9, 0.9); }
+  100% { opacity: 1; }
+}
+@keyframes cc-w7t04 { 
+  0% { opacity: 0; transform: translateY(4%); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cc-lngcp { 
+  0% { opacity: 0; transform: translate(100px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cc-yx2c1 { 
+  0% { opacity: 0; transform: translate(-100px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cc-1mrui { 
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes cc-1wkka { 
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+@keyframes cc-eq177 { 
+  0% { opacity: 0; transform: translateY(3%); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cc-kjd3c { 
+  0% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(2.5%); }
+}
+@keyframes cc-1clf6 { 
+  0% { opacity: 0; transform: rotate(-10deg); }
+  100% { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes cc-p8ryp { 
+  0% { opacity: 1; transform: rotate(0deg); }
+  100% { opacity: 0; transform: rotate(-10deg); }
+}
+@font-face { font-family: "Crisp Noto Sans Regular"; font-weight: 400; font-style: normal; src: url("fonts/29209d0f-e85f-47a0-afe6-7e77c18cb011.woff2") format("woff2"); unicode-range: U+20-7F; }
+@font-face { font-family: "Crisp Noto Sans Bold"; font-weight: 700; font-style: normal; src: url("fonts/d1170779-579a-4eb2-9323-7bf0d2d67d2b.woff2") format("woff2"); unicode-range: U+20-7F; }
+@font-face { font-family: "Crisp Noto Sans Regular"; font-weight: 400; font-style: normal; src: url("fonts/12cb4c4f-50fd-43c0-86d6-e4ac33842d1a.woff2") format("woff2"); unicode-range: U+A0-FF; }
+@font-face { font-family: "Crisp Noto Sans Bold"; font-weight: 700; font-style: normal; src: url("fonts/9a0ec174-437a-4d6d-afbc-73bc8bc4dc41.woff2") format("woff2"); unicode-range: U+A0-FF; }
+@font-face { font-family: "Crisp Noto Sans Regular"; font-weight: 400; font-style: normal; src: url("fonts/79d7efb5-3f99-4629-8c7e-7a3be98c51e5.woff2") format("woff2"); unicode-range: U+2000-206F; }
+@font-face { font-family: "Hack Regular"; font-weight: 400; font-style: normal; src: url("fonts/7831c317-495d-4bc1-bc41-d1347de9ca01.woff2") format("woff2"); }
+.crisp-client { font-family: "Crisp Noto Sans Regular", "Helvetica Neue", Helvetica, Arial, sans-serif !important; font-size: 11px !important; }
+.crisp-client * { font-weight: 400 !important; margin: 0px !important; padding: 0px !important; font-size: 11px !important; -webkit-font-smoothing: subpixel-antialiased !important; user-select: none !important; }
+@media (hover: hover) {
+}
+@media (hover: hover) {
+}

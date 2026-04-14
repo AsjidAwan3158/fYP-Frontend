@@ -1,0 +1,16 @@
+import type { JSX } from 'react/jsx-runtime'
+
+
+import React from 'react';
+
+export const Check_mark = () => {
+    return (
+<svg xmlns={"http://www.w3.org/2000/svg"} width={"14"} height={"14"} viewBox={"0 0 24 24"} fill={"none"} stroke={"currentColor"} strokeWidth={"2"} strokeLinecap={"round"} strokeLinejoin={"round"} className={"icon icon-tabler icons-tabler-outline icon-tabler-check text-blue-600"}>
+<path stroke={"none"} d={"M0 0h24v24H0z"} fill={"none"}></path>
+<path d={"M5 12l5 5l10 -10"}></path>
+</svg>    );
+}
+
+
+
+export default Check_mark

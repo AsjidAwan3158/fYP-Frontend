@@ -1,0 +1,15 @@
+@font-face { font-family: FigtreeVF; src: url("chrome-extension://majdfhpaihoncoakbjgbdhglocklcgno/fonts/FigtreeVF.woff2") format("woff2-variations"); font-weight: 100 1000; }
+
+/* Sidebar toggle functionality */
+[data-sidebar-container][data-sidebar-visible="false"] .sidebar {
+    width: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    border-right-width: 0 !important;
+    padding: 0 !important;
+}
+
+[data-sidebar-container][data-sidebar-visible="true"] .sidebar {
+    width: 350px;
+    opacity: 1;
+}
