@@ -5,6 +5,7 @@ import TagInput from '../tags/TagInput.tsx'
 import TagifyToggle from '../tags/TagifyToggle.tsx'
 import Tags from '../tags/Tags.tsx'
 
+const EXCLUDE_KEYWORDS_STORAGE_KEY = 'upwork_filter_exclude_keywords'
 
 // Component
 function ExcludeKeywordsSection() {
@@ -21,6 +22,7 @@ function ExcludeKeywordsSection() {
                         className={"tagify tagify--outside tagify-negative-keywords w-full"}
                         dataId="1"
                         hiddenInputName="negative_keywords"
+                        storageKey={EXCLUDE_KEYWORDS_STORAGE_KEY}
                     />
 
                     <TagInput

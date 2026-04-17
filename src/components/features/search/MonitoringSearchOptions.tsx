@@ -1,19 +1,41 @@
-import React, { useState } from 'react'
-import type { JSX } from 'react/jsx-runtime'
+import React, { useEffect } from 'react'
 
 import MonitoringCheckbox from './MonitoringCheckbox.tsx'
+import { useFilterState } from '@/hooks/useFilterState'
 
 
 // Component
 function MonitoringSearchOptions() {
-    const [searchInTitle, setSearchInTitle] = useState(true);
-    const [searchInDescription, setSearchInDescription] = useState(false);
-    const [searchInSkills, setSearchInSkills] = useState(true);
-    const [highlightKeywords, setHighlightKeywords] = useState(true);
-    const [advancedSearchMode, setAdvancedSearchMode] = useState(true);
+    const {
+        searchInTitle,
+        searchInDescription,
+        searchInSkills,
+        setSearchInTitle,
+        setSearchInDescription,
+        setSearchInSkills,
+    } = useFilterState()
+
+    // Sync checkbox states to hidden inputs
+    useEffect(() => {
+        const titleInput = document.querySelector('input[type="hidden"][name="search_in_title"]') as HTMLInputElement | null
+        const descInput = document.querySelector('input[type="hidden"][name="search_in_description"]') as HTMLInputElement | null
+        const skillsInput = document.querySelector('input[type="hidden"][name="search_in_skills"]') as HTMLInputElement | null
+
+        if (titleInput) titleInput.value = String(searchInTitle)
+        if (descInput) descInput.value = String(searchInDescription)
+        if (skillsInput) skillsInput.value = String(searchInSkills)
+
+        // Dispatch event to notify JobTasksTable of changes
+        window.dispatchEvent(new CustomEvent('searchOptionsChanged'))
+    }, [searchInTitle, searchInDescription, searchInSkills])
 
     return (
         <div className={"mb-4 flex flex-wrap text-sm gap-x-3 gap-y-2"}>
+            {/* Hidden inputs to store checkbox states - default all OFF */}
+            <input type="hidden" name="search_in_title" defaultValue="false" />
+            <input type="hidden" name="search_in_description" defaultValue="false" />
+            <input type="hidden" name="search_in_skills" defaultValue="false" />
+
             <CheckboxOption
                 id="monitoring_form_searchInTitle"
                 name="search_in_title"
@@ -34,20 +56,6 @@ function MonitoringSearchOptions() {
                 checked={searchInSkills}
                 onChange={setSearchInSkills}
                 label={`     Search in skills     `}
-            />
-            <CheckboxOption 
-                id="monitoring_form_highlightKeywords"
-                name="highlight_keywords"
-                checked={highlightKeywords}
-                onChange={setHighlightKeywords}
-                label={`     Highlight keywords     `}
-            />
-            <CheckboxOption 
-                id="monitoring_form_advancedSearchMode"
-                name="advanced_search_mode"
-                checked={advancedSearchMode}
-                onChange={setAdvancedSearchMode}
-                label={`Advanced Search Mode     `}
             />
         </div>
     );

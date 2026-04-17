@@ -23,7 +23,7 @@ type JobRowData = {
         avgHourlyRate: string;
         clientLocation: string;
         countryFlag: string;
-        description: string[];
+        description: React.ReactNode[];
         clientQuestions: string[];
         skills: { name: string; highlighted: boolean }[];
         hoursPerWeek: string;
@@ -35,10 +35,20 @@ type JobRowData = {
     };
 }
 
-// Extract keywords from hidden form inputs
-function getFilterKeywords(): { include: string; exclude: string } {
+// Extract keywords and field-specific search options from hidden form inputs
+function getFilterKeywords(): {
+    include: string;
+    exclude: string;
+    searchInTitle: boolean;
+    searchInDescription: boolean;
+    searchInSkills: boolean;
+} {
     const includeInput = document.querySelector('input[name="search_keywords"]') as HTMLInputElement | null
     const excludeInput = document.querySelector('input[name="negative_keywords"]') as HTMLInputElement | null
+    // Use type="hidden" selector to get the hidden inputs specifically (not the checkbox inputs)
+    const searchInTitleInput = document.querySelector('input[type="hidden"][name="search_in_title"]') as HTMLInputElement | null
+    const searchInDescriptionInput = document.querySelector('input[type="hidden"][name="search_in_description"]') as HTMLInputElement | null
+    const searchInSkillsInput = document.querySelector('input[type="hidden"][name="search_in_skills"]') as HTMLInputElement | null
 
     let includeKeywords = ''
     let excludeKeywords = ''
@@ -55,7 +65,7 @@ function getFilterKeywords(): { include: string; exclude: string } {
                 }
             }
         } catch {
-            includeKeywords = val
+            includeKeywords = includeInput.value
         }
     }
 
@@ -71,11 +81,24 @@ function getFilterKeywords(): { include: string; exclude: string } {
                 }
             }
         } catch {
-            excludeKeywords = val
+            excludeKeywords = excludeInput.value
         }
     }
 
-    return { include: includeKeywords, exclude: excludeKeywords }
+    // Read field-specific search checkboxes (default to false if not found)
+    const searchInTitle = searchInTitleInput ? searchInTitleInput.value === 'true' : false
+    const searchInDescription = searchInDescriptionInput ? searchInDescriptionInput.value === 'true' : false
+    const searchInSkills = searchInSkillsInput ? searchInSkillsInput.value === 'true' : false
+
+    console.log('[getFilterKeywords] searchInTitle=', searchInTitle, 'searchInDescription=', searchInDescription, 'searchInSkills=', searchInSkills)
+
+    return {
+        include: includeKeywords,
+        exclude: excludeKeywords,
+        searchInTitle,
+        searchInDescription,
+        searchInSkills
+    }
 }
 
 function JobTasksTable({
@@ -83,28 +106,61 @@ function JobTasksTable({
 }: {
     dataId: string;
 }) {
-    const fallbackRows = useMemo(() => getJobRowsData(), [])
-    const [jobRows, setJobRows] = useState<JobRowData[]>(fallbackRows)
+    const [jobRows, setJobRows] = useState<JobRowData[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
     const [apiError, setApiError] = useState<string | null>(null)
     const [dataSource, setDataSource] = useState<'live' | 'fallback'>('fallback')
+    const [currentKeywords, setCurrentKeywords] = useState<string>('')
+    const [searchOptions, setSearchOptions] = useState<{searchInTitle: boolean; searchInDescription: boolean; searchInSkills: boolean}>({
+        searchInTitle: false,
+        searchInDescription: false,
+        searchInSkills: false
+    })
     const existingJobIds = useRef<Set<string>>(new Set())
     const isFirstLoad = useRef(true)
+    const currentOffset = useRef(0)
+    const totalCount = useRef(0)
+    const keywordsRef = useRef<string>('')
+    const searchOptionsRef = useRef<{searchInTitle: string; searchInDescription: string; searchInSkills: string}>({
+        searchInTitle: 'false',
+        searchInDescription: 'false',
+        searchInSkills: 'false'
+    })
 
-    const fetchJobs = useCallback(async (isBackground = false) => {
-        if (!isBackground) setIsLoading(true)
+    // Fetch jobs with pagination support
+    const fetchJobs = useCallback(async (isBackground = false, offset: number = 0, append: boolean = false) => {
+        if (!isBackground && !append) setIsLoading(true)
         setApiError(null)
         try {
-            const { include } = getFilterKeywords()
-            // Parse include keywords into array
+            const { include, searchInTitle, searchInDescription, searchInSkills } = getFilterKeywords()
             const highlightTerms = include
                 ? include.split(',').map(k => k.trim()).filter(k => k.length > 0)
                 : []
 
+            console.log('[JobTasksTable] Fetching from backend, isBackground=', isBackground, 'append=', append, 'offset=', offset, 'includeKeywords=', include || '(none)', 'parsed highlightTerms=', highlightTerms)
+            console.log('[JobTasksTable] Field search: title=', searchInTitle, 'description=', searchInDescription, 'skills=', searchInSkills)
+
             const response = await getMostRecentJobs({
                 includeKeywords: include || undefined,
-                limit: 50
+                limit: 50,
+                offset: offset,
+                searchInTitle,
+                searchInDescription,
+                searchInSkills
             })
+
+            console.log('[JobTasksTable] API response → jobs count:', response.jobs?.length, 'total:', response.total_count, 'has_more:', response.has_more)
+
+            // Check for errors in response
+            if (!response || !response.jobs) {
+                console.error('[JobTasksTable] Invalid API response:', response)
+                setApiError('Invalid response from server')
+                return
+            }
+
+            // Update total count
+            totalCount.current = response.total_count
 
             let mappedRows = mapBackendJobsToRows(response.jobs, highlightTerms)
 
@@ -131,11 +187,21 @@ function JobTasksTable({
             }
 
             if (mappedRows.length > 0) {
-                if (isFirstLoad.current || existingJobIds.current.size === 0) {
+                if (append) {
+                    // Append new rows to existing list (load more)
+                    const newRows = mappedRows.filter(r => !existingJobIds.current.has(r.rowId))
+                    if (newRows.length > 0) {
+                        setJobRows(prev => [...prev, ...newRows])
+                        existingJobIds.current = new Set([...Array.from(existingJobIds.current), ...newRows.map(r => r.rowId)])
+                        console.log('[JobTasksTable] Loaded', newRows.length, 'more jobs, total:', existingJobIds.current.size)
+                    }
+                } else if (isFirstLoad.current || existingJobIds.current.size === 0) {
                     setJobRows(mappedRows)
                     existingJobIds.current = new Set(mappedRows.map(r => r.rowId))
+                    currentOffset.current = mappedRows.length
                     setDataSource('live')
                     isFirstLoad.current = false
+                    console.log('[JobTasksTable] Set', mappedRows.length, 'jobs, dataSource=live')
                 } else {
                     // Detect new jobs (not in existing set)
                     const newRows = mappedRows.filter(r => !existingJobIds.current.has(r.rowId))
@@ -144,29 +210,118 @@ function JobTasksTable({
                         const existingFiltered = mappedRows.filter(r => existingJobIds.current.has(r.rowId))
                         setJobRows([...newRows, ...existingFiltered])
                         existingJobIds.current = new Set([...newRows.map(r => r.rowId), ...Array.from(existingJobIds.current)])
+                        currentOffset.current = existingJobIds.current.size
                     }
                 }
-            } else if (!isBackground) {
-                setJobRows(fallbackRows)
+            } else if (!isBackground && !append) {
+                setJobRows([])
                 setDataSource('fallback')
-                setApiError('Backend returned no jobs. Showing sample data.')
+                setApiError('Backend returned no jobs.')
             }
         } catch (error: any) {
-            if (!isBackground) {
-                setJobRows(fallbackRows)
+            console.error('[JobTasksTable] Error fetching jobs:', error)
+            if (!isBackground && !append) {
+                setJobRows([])
                 setDataSource('fallback')
-                setApiError(error?.message ? String(error.message) : 'Backend not reachable. Showing sample data.')
+                setApiError(error?.message ? String(error.message) : 'Backend not reachable.')
             }
         } finally {
-            if (!isBackground) setIsLoading(false)
+            if (!isBackground && !append) setIsLoading(false)
+            if (append) setIsLoadingMore(false)
         }
-    }, [fallbackRows])
+    }, [])
+
+    // Load more jobs handler
+    const loadMoreJobs = useCallback(() => {
+        if (isLoadingMore) return // Prevent double-clicks
+        setIsLoadingMore(true)
+        currentOffset.current += 50
+        fetchJobs(false, currentOffset.current, true)
+    }, [fetchJobs, isLoadingMore])
+
+    // Check if there are more jobs to load
+    const hasMoreJobs = currentOffset.current < totalCount.current
+
+    // Track keyword AND checkbox option changes
+    useEffect(() => {
+        const checkForChanges = () => {
+            // Re-query elements each time since they might not exist on first render
+            const keywordInput = document.querySelector('input[name="search_keywords"]') as HTMLInputElement | null
+            const searchInTitleInput = document.querySelector('input[type="hidden"][name="search_in_title"]') as HTMLInputElement | null
+            const searchInDescriptionInput = document.querySelector('input[type="hidden"][name="search_in_description"]') as HTMLInputElement | null
+            const searchInSkillsInput = document.querySelector('input[type="hidden"][name="search_in_skills"]') as HTMLInputElement | null
+
+            const newKeywords = keywordInput?.value || ''
+            const newTitle = searchInTitleInput?.value || 'false'
+            const newDesc = searchInDescriptionInput?.value || 'false'
+            const newSkills = searchInSkillsInput?.value || 'false'
+
+            const searchOptionsChanged =
+                newTitle !== searchOptionsRef.current.searchInTitle ||
+                newDesc !== searchOptionsRef.current.searchInDescription ||
+                newSkills !== searchOptionsRef.current.searchInSkills
+
+            console.log('[JobTasksTable] checkForChanges: keywords=', newKeywords, 'title=', newTitle, 'desc=', newDesc, 'skills=', newSkills)
+
+            if (newKeywords !== keywordsRef.current || searchOptionsChanged) {
+                keywordsRef.current = newKeywords
+                searchOptionsRef.current = {
+                    searchInTitle: newTitle,
+                    searchInDescription: newDesc,
+                    searchInSkills: newSkills
+                }
+                setCurrentKeywords(newKeywords)
+                setSearchOptions({
+                    searchInTitle: newTitle === 'true',
+                    searchInDescription: newDesc === 'true',
+                    searchInSkills: newSkills === 'true'
+                })
+                console.log('[JobTasksTable] Keywords or search options changed:', newKeywords, searchOptionsRef.current)
+            }
+        }
+
+        // Listen for custom event dispatched when checkbox values change
+        const handleSearchOptionsChange = () => {
+            console.log('[JobTasksTable] Received searchOptionsChange event')
+            checkForChanges()
+        }
+
+        // Initial read
+        checkForChanges()
+
+        // Also set up polling to catch any late-rendered inputs
+        const pollInterval = setInterval(checkForChanges, 1000)
+
+        // Listen for custom event from MonitoringSearchOptions
+        window.addEventListener('searchOptionsChanged', handleSearchOptionsChange)
+
+        // Cleanup
+        return () => {
+            clearInterval(pollInterval)
+            window.removeEventListener('searchOptionsChanged', handleSearchOptionsChange)
+        }
+    }, [])
+
+    // Refetch when keywords OR search options change
+    useEffect(() => {
+        console.log('[JobTasksTable] Keywords or search options changed effect:', currentKeywords, searchOptions)
+        // Reset pagination and refetch when keywords or search options change
+        console.log('[JobTasksTable] Triggering fetch for keywords:', currentKeywords, 'searchOptions:', searchOptions)
+        isFirstLoad.current = true
+        currentOffset.current = 0
+        existingJobIds.current = new Set()
+        fetchJobs(false, 0, false)
+    }, [currentKeywords, searchOptions, fetchJobs])
 
     useEffect(() => {
         fetchJobs(false)
 
-        // Poll every 10 seconds for new jobs
-        const interval = setInterval(() => fetchJobs(true), 10000)
+        // Poll every 10 seconds for new jobs (only if no keywords active)
+        const interval = setInterval(() => {
+            if (!currentKeywords) {
+                fetchJobs(true)
+            }
+        }, 10000)
         return () => {
             clearInterval(interval)
             isFirstLoad.current = true
@@ -186,7 +341,7 @@ function JobTasksTable({
                 {isLoading
                     ? 'Loading jobs from backend…'
                     : dataSource === 'live'
-                    ? `✓ Backend data loaded (${jobRows.length} jobs). New jobs appear at top automatically.`
+                    ? `✓ Backend data loaded (${jobRows.length} of ${totalCount.current} jobs). ${hasMoreJobs ? `Click "Load more" to see more.` : 'All jobs loaded.'}`
                     : `⚠ Sample data in use.${apiError ? ` ${apiError}` : ''}`}
             </div>
 
@@ -214,7 +369,25 @@ function JobTasksTable({
                         <tr>
                             <td colSpan={100} className="text-center py-2 px-3">
                                 <div className="m-5 text-center">
-                                    <LoadMoreButton />
+                                    {hasMoreJobs || jobRows.length < totalCount.current ? (
+                                        <button
+                                            type="button"
+                                            onClick={loadMoreJobs}
+                                            disabled={isLoadingMore || isLoading}
+                                            className="js-load-more-btn py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 shadow-xs hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                                        >
+                                            {isLoadingMore ? (
+                                                <>
+                                                    <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full mr-2"></span>
+                                                    Loading more...
+                                                </>
+                                            ) : (
+                                                <>Load more ({totalCount.current - jobRows.length} remaining)</>
+                                            )}
+                                        </button>
+                                    ) : jobRows.length > 0 ? (
+                                        <span className="text-sm text-gray-500">No more jobs to load ({jobRows.length} total)</span>
+                                    ) : null}
                                 </div>
                             </td>
                         </tr>

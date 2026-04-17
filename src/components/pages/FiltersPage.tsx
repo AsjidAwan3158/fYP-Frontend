@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import FilterActionsDropdown from '../features/filters/FilterActionsDropdown.tsx'
@@ -45,23 +45,12 @@ interface Filter {
     status: 'Active' | 'Paused' | 'Draft';
 }
 
-interface FiltersPageProps {
-    filters?: Filter[];
-}
-
-const defaultFilters: Filter[] = [
-    { id: '1', name: 'Cost Estimators', hasNotifications: true, status: 'Active' },
-    { id: '2', name: 'Framer', hasNotifications: true, status: 'Active' },
-    { id: '3', name: 'automation', hasNotifications: true, status: 'Active' },
-    { id: '4', name: 'framer specific', hasNotifications: true, status: 'Active' },
-];
-
-function FiltersPage({ filters = defaultFilters }: FiltersPageProps) {
-    const [filterList, setFilterList] = useState<Filter[]>(filters);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const navigate = useNavigate();
+function FiltersPage() {
+    const [filterList, setFilterList] = useState<Filter[]>([])
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [loadError, setLoadError] = useState<string | null>(null)
+    const navigate = useNavigate()
 
     const mapDtoToUi = (dto: FilterDto): Filter => ({
         id: dto.id,
@@ -69,8 +58,6 @@ function FiltersPage({ filters = defaultFilters }: FiltersPageProps) {
         hasNotifications: dto.hasNotifications ?? true,
         status: dto.status ?? 'Active',
     })
-
-    const initialFilters = useMemo(() => filters, [filters])
 
     useEffect(() => {
         const controller = new AbortController()
@@ -82,13 +69,12 @@ function FiltersPage({ filters = defaultFilters }: FiltersPageProps) {
                 const apiFilters = await listFilters(controller.signal)
                 setFilterList(apiFilters.map(mapDtoToUi))
             } catch (e: any) {
-                // If the backend isn't wired yet, keep the page usable with local defaults.
-                setFilterList(initialFilters)
+                setFilterList([])
                 if (e?.name === 'AbortError') return
                 if (e instanceof HttpError && e.status === 404) {
-                    setLoadError('Filters API not found. Using local demo data.')
+                    setLoadError('Filters API not found.')
                 } else {
-                    setLoadError(e?.message ? String(e.message) : 'Failed to load filters. Using local demo data.')
+                    setLoadError(e?.message ? String(e.message) : 'Failed to load filters.')
                 }
             } finally {
                 setIsLoading(false)
@@ -96,7 +82,7 @@ function FiltersPage({ filters = defaultFilters }: FiltersPageProps) {
         })()
 
         return () => controller.abort()
-    }, [initialFilters])
+    }, [])
 
     const handleAddFilter = async (filterData: CreateFilterInput) => {
         const created = await createFilter(filterData)

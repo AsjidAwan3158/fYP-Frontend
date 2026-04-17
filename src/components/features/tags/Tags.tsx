@@ -13,48 +13,73 @@ function Tags({
     dataId,
     onChange,
     hiddenInputName,
+    storageKey,
 }: {
     className: string;
     dataId: string;
     onChange?: (labels: string[]) => void;
     hiddenInputName?: string;
+    storageKey?: string;
 }) {
-    const initialData = getTagsData(dataId);
-    const [labels, setLabels] = useState<string[]>(initialData.labels);
-    const [isFocused, setIsFocused] = useState(false);
-    const inputRef = useRef<HTMLSpanElement>(null);
+    // Load from localStorage if storageKey provided, otherwise start empty
+    const [labels, setLabels] = useState<string[]>(() => {
+        if (storageKey) {
+            try {
+                const stored = localStorage.getItem(storageKey)
+                if (stored) {
+                    const parsed = JSON.parse(stored)
+                    if (Array.isArray(parsed)) return parsed
+                }
+            } catch (e) {
+                console.warn('[Tags] Failed to load from localStorage:', e)
+            }
+        }
+        return []
+    })
+    const [isFocused, setIsFocused] = useState(false)
+    const inputRef = useRef<HTMLSpanElement>(null)
+
+    // Sync to localStorage and hidden input whenever labels change
+    useEffect(() => {
+        if (storageKey) {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(labels))
+            } catch (e) {
+                console.warn('[Tags] Failed to save to localStorage:', e)
+            }
+        }
+        syncHiddenInput(labels)
+    }, [labels, storageKey])
 
     const syncHiddenInput = (next: string[]) => {
         if (!hiddenInputName) {
-            return;
+            return
         }
 
-        const input = document.querySelector<HTMLInputElement>(`input[name="${hiddenInputName}"]`);
+        const input = document.querySelector<HTMLInputElement>(`input[name="${hiddenInputName}"]`)
         if (input) {
-            const payload = next.map((label) => ({ value: label, html: label }));
-            input.value = JSON.stringify(payload);
+            const payload = next.map((label) => ({ value: label, html: label }))
+            input.value = JSON.stringify(payload)
+            // Dispatch event so JobTasksTable knows keywords changed
+            window.dispatchEvent(new CustomEvent('searchOptionsChanged'))
         }
-    };
+    }
 
     const updateLabels = (next: string[]) => {
-        setLabels(next);
-        onChange?.(next);
-    };
-
-    useEffect(() => {
-        syncHiddenInput(labels);
-    }, [hiddenInputName, labels]);
+        setLabels(next)
+        onChange?.(next)
+    }
 
     const handleAddTag = (value: string) => {
-        const trimmedValue = value.trim();
+        const trimmedValue = value.trim()
         if (trimmedValue && !labels.includes(trimmedValue)) {
-            updateLabels([...labels, trimmedValue]);
+            updateLabels([...labels, trimmedValue])
         }
-    };
+    }
 
     const handleRemoveTag = (labelToRemove: string) => {
-        updateLabels(labels.filter(label => label !== labelToRemove));
-    };
+        updateLabels(labels.filter(label => label !== labelToRemove))
+    }
 
     const commitCurrentInput = () => {
         const target = inputRef.current;
@@ -139,25 +164,6 @@ function TagItem({ label, onRemove }: { label: string; onRemove: () => void }) {
             </div>
         </div>
     );
-}
-
-
-function getTagsData(id: string): TagsData {
-    const key = String(id);
-    const dataMap: Record<string, TagsData> = {
-        "0": {
-            labels: [
-                "framer"              
-            ]
-        },
-        "1": {
-            labels: [
-                "wix"
-            ]
-        }
-    };
-
-    return dataMap[key] || { labels: [] };
 }
 
 

@@ -7,6 +7,8 @@ import {
   type BackendJob,
 } from '../lib/backendApi'
 
+const P = (msg: string, extra?: object) => console.log(`[ScrapePage] ${msg}`, extra ?? {})
+
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 const SearchIcon = () => (
@@ -149,25 +151,30 @@ export default function ScrapePage() {
     try {
       const s = await getScrapeStatus(id)
       setStatus(s)
+      P(`[pollStatus] task_id=${id}, status=${s.status}`, s)
       if (s.status === 'completed') {
         stopPolling()
+        P(`[pollStatus] completed → loading results for task_id=${id}`)
         await loadResults(id, 1)
       } else if (s.status === 'failed') {
         stopPolling()
+        P(`[pollStatus] FAILED → ${s.error_message}`)
         setError(s.error_message ?? 'Scraping failed.')
       }
-    } catch (e: any) { setError(e.message) }
+    } catch (e: any) { P(`[pollStatus] error → ${e.message}`); setError(e.message) }
   }
 
   async function loadResults(id: string, page: number) {
     setIsLoadingResults(true)
+    P(`[loadResults] task_id=${id}, page=${page}, perPage=${jobsPerPage}`)
     try {
       const res = await getScrapeResults(id, page, jobsPerPage)
+      P(`[loadResults] loaded → ${res.jobs.length} jobs, total=${res.total_jobs}, page=${res.page}/${res.total_pages}`)
       setJobs(res.jobs)
       setCurrentPage(res.page)
       setTotalPages(res.total_pages)
       setTotalJobs(res.total_jobs)
-    } catch (e: any) { setError(e.message) }
+    } catch (e: any) { P(`[loadResults] error → ${e.message}`); setError(e.message) }
     setIsLoadingResults(false)
   }
 
@@ -181,12 +188,14 @@ export default function ScrapePage() {
     setTaskId(null)
     setIsStarting(true)
     stopPolling()
+    P(`[handleStart] starting scrape → query="${query}", pages=${pages}, jobsPerPage=${jobsPerPage}, headless=${headless}, workers=${workers}`)
     try {
       const res = await startScrape({ query, page: pages, jobs_per_page: jobsPerPage, headless, workers })
+      P(`[handleStart] task created → task_id=${res.task_id}`)
       setTaskId(res.task_id)
       setStatus({ task_id: res.task_id, status: 'started' })
       pollRef.current = setInterval(() => pollStatus(res.task_id), 2500)
-    } catch (e: any) { setError(e.message) }
+    } catch (e: any) { P(`[handleStart] error → ${e.message}`); setError(e.message) }
     setIsStarting(false)
   }
 

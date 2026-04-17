@@ -2,12 +2,34 @@
  * backendApi.ts
  * Central API client for FYP backend servers.
  * Scraping API  → proxied via /api/upwork  → http://localhost:8000
- * Monitoring API → proxied via /api/monitor → http://localhost:8002
+ * Monitoring API → proxied via /api/monitor → http://localhost:8000
  */
+
+// ─── Logger setup ────────────────────────────────────────────────────────────
+
+const API_PREFIX = '[API]'
+
+function logRequest(method: string, path: string, body?: object) {
+  console.log(`${API_PREFIX} ➡️  ${method} ${path}`, body ? { body } : {})
+}
+
+function logResponse(method: string, path: string, status: number, extra?: object) {
+  const ok = status >= 200 && status < 300
+  const icon = ok ? '✅' : '❌'
+  console.log(`${API_PREFIX} ${icon} ${status} ${method} ${path}`, extra ?? {})
+}
+
+function logError(method: string, path: string, error: string) {
+  console.error(`${API_PREFIX} ❌ ERROR ${method} ${path} → ${error}`)
+}
 
 // ─── Generic fetch helper ────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const method = options?.method ?? 'GET'
+  const reqBody = options?.body ? JSON.parse(options.body as string) : undefined
+  logRequest(method, path, reqBody ? { body: reqBody } : undefined)
+
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     ...options,
@@ -15,8 +37,11 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const payload = await res.json().catch(() => ({}))
   if (!res.ok) {
     const msg = payload?.detail ?? payload?.message ?? `Request failed (${res.status})`
-    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg))
+    const errorMsg = typeof msg === 'string' ? msg : JSON.stringify(msg)
+    logError(method, path, errorMsg)
+    throw new Error(errorMsg)
   }
+  logResponse(method, path, res.status, { ok: true })
   return payload as T
 }
 
@@ -72,10 +97,13 @@ export interface ScrapeResultsResponse {
 export interface MostRecentJobsResponse {
   jobs: BackendJob[]
   count: number
+  total_count: number
   query?: string
   include_keywords?: string
   exclude_keywords?: string
   limit?: number
+  offset?: number
+  has_more: boolean
 }
 
 // ─── Monitoring API types ─────────────────────────────────────────────────────
@@ -208,12 +236,20 @@ export async function getMostRecentJobs(params?: {
   includeKeywords?: string
   excludeKeywords?: string
   limit?: number
+  offset?: number
+  searchInTitle?: boolean
+  searchInDescription?: boolean
+  searchInSkills?: boolean
 }): Promise<MostRecentJobsResponse> {
   const searchParams = new URLSearchParams()
   if (params?.query) searchParams.set('query', params.query)
   if (params?.includeKeywords) searchParams.set('include_keywords', params.includeKeywords)
   if (params?.excludeKeywords) searchParams.set('exclude_keywords', params.excludeKeywords)
   if (params?.limit) searchParams.set('limit', String(params.limit))
+  if (params?.offset) searchParams.set('offset', String(params.offset))
+  if (params?.searchInTitle !== undefined) searchParams.set('search_in_title', String(params.searchInTitle))
+  if (params?.searchInDescription !== undefined) searchParams.set('search_in_description', String(params.searchInDescription))
+  if (params?.searchInSkills !== undefined) searchParams.set('search_in_skills', String(params.searchInSkills))
   const qs = searchParams.toString() ? `?${searchParams.toString()}` : ''
   return apiFetch<MostRecentJobsResponse>(`/api/upwork/most_recent_jobs${qs}`)
 }

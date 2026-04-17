@@ -4,6 +4,7 @@ import TagInput from '../tags/TagInput.tsx'
 import TagifyToggle from '../tags/TagifyToggle.tsx'
 import Tags from '../tags/Tags.tsx'
 
+const INCLUDE_KEYWORDS_STORAGE_KEY = 'upwork_filter_include_keywords'
 
 // Component
 function SearchKeywordsCollapsible() {
@@ -14,6 +15,7 @@ function SearchKeywordsCollapsible() {
                     className={"tagify tagify--outside tagify-keywords w-full"}
                     dataId="0"
                     hiddenInputName="search_keywords"
+                    storageKey={INCLUDE_KEYWORDS_STORAGE_KEY}
                 />
 
                 <TagInput

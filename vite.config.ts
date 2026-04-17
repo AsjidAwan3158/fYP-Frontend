@@ -9,13 +9,13 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Unified API backend on port 8000
+      // upwork-monitoring-setup API on port 8003
       '/api/upwork': {
-        target: 'http://localhost:8006',
+        target: 'http://localhost:8003',
         changeOrigin: true,
       },
       '/api/monitor': {
-        target: 'http://localhost:8006',
+        target: 'http://localhost:8003',
         changeOrigin: true,
       },
     },

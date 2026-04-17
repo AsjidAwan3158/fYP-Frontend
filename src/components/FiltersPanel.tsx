@@ -31,9 +31,9 @@ function FiltersPanel() {
     return (
         <fieldset className={"h-full overflow-y-auto"}>
             <div className={"font-size-1 px-2 pb-2 space-y-2 [&>.filter-section]:rounded-lg [&>.filter-section]:border [&>.filter-section]:border-transparent [&>.filter-section:hover]:bg-white [&>.filter-section:hover]:border-gray-200 [&>.active]:border-gray-200! [&>.active]:bg-white [&>.active]:rounded-lg"}>
-                
+
                 {/* Keywords section */}
-                <FilterSection 
+                <FilterSection
                     defaultOpen={true}
                     icon={<Hash_symbol />}
                     label="Keywords"
@@ -64,9 +64,9 @@ function FiltersPanel() {
                     </div>
                     <div>
                         {/* <AdvancedKeywordsOptionsLabel /> */}
-                        <SearchLabel text='Advanced Keywords Options:'/>
+                        <SearchLabel text='Advanced Keywords Options:' />
                         <MonitoringSearchOptions />
-                     
+
                         {/* <div className={"mb-5"}>
                             <div className={"flex items-center mb-1"}>
                                 <MonitoringCheckbox
@@ -93,41 +93,11 @@ function FiltersPanel() {
                     </div>
                 </FilterSection>
 
-
-                {/* Job terms section */}
-                <FilterSection
-                    icon={<Circle_dollar_sign />}
-                    label="Job terms"
-                    bodyClassName={"filter-section-body px-3 py-3"}
-                >
-                    <JobTermsContent />
-                </FilterSection>
-
-                {/* Client details section */}
-                <FilterSection
-                    icon={<User_check />}
-                    label="Client details"
-                    statusBadge={
-                        <StatusBadge
-                            sizeClass="size-4"
-                            content={<Check_mark />}
-                        />
-                    }
-                    bodyClassName={"filter-section-body px-3 py-3"}
-                />
-
-                {/* Advanced filters section */}
-                <FilterSection
-                    icon={<Connection_links />}
-                    label="Advanced Filters"
-                    bodyClassName={"filter-section-body px-3 py-3 sf-hidden"}
-                />
-
             </div>
         </fieldset>
     );
 }
-    
+
 
 // Subcomponents
 
@@ -181,6 +151,6 @@ function FilterSection({
         </div>
     );
 }
-    
+
 
 export default FiltersPanel

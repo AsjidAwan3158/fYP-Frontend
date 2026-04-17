@@ -87,6 +87,21 @@ export function mapBackendJobsToRows(jobs: BackendJob[], highlightTerms?: string
       ? highlightKeywords(job.title || '', highlightTerms)
       : job.title
 
+    // Highlight keywords in description parts if provided
+    const description = highlightTerms && highlightTerms.length > 0
+      ? descParts.map(part => highlightKeywords(part, highlightTerms))
+      : descParts
+
+    // Highlight keywords in skills if provided
+    const skills = highlightTerms && highlightTerms.length > 0
+      ? skillObjs.map(skill => ({
+          ...skill,
+          highlighted: highlightTerms.some(k =>
+            skill.name.toLowerCase().includes(k.toLowerCase())
+          )
+        }))
+      : skillObjs
+
     return {
       rowId: job.job_id ?? `backend-job-${index}`,
       rowVariant: (index % 2 === 0 ? 'even' : 'odd') as 'even' | 'odd',
@@ -117,9 +132,9 @@ export function mapBackendJobsToRows(jobs: BackendJob[], highlightTerms?: string
         avgHourlyRate: 'N/A',
         clientLocation: country,
         countryFlag: flag(country),
-        description: descParts,
+        description,
         clientQuestions: [],
-        skills: skillObjs,
+        skills,
         hoursPerWeek: 'N/A',
         duration: 'N/A',
         expertiseLevel: 'N/A',

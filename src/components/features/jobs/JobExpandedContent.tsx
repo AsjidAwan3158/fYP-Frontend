@@ -79,7 +79,7 @@ interface JobExpandedContentProps {
         avgHourlyRate: string;
         clientLocation: string;
         countryFlag: string;
-        description: string[];
+        description: React.ReactNode[];
         clientQuestions: string[];
         skills: { name: string; highlighted: boolean }[];
         hoursPerWeek: string;

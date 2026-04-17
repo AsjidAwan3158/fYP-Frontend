@@ -13,6 +13,8 @@ import {
   type MonitoringAlert,
 } from '../lib/backendApi'
 
+const P = (msg: string, extra?: object) => console.log(`[MonitoringPage] ${msg}`, extra ?? {})
+
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 const PlusIcon = () => (
@@ -60,11 +62,13 @@ function NewSessionForm({ onStarted }: NewSessionFormProps) {
     e.preventDefault()
     if (!query.trim() || !webhookUrl.trim()) { setError('Query and Webhook URL are required.'); return }
     setError(null); setLoading(true)
+    P(`[handleSubmit] starting monitor → query="${query}", webhook=${webhookUrl}, interval=${interval}, headless=${headless}`)
     try {
-      await startMonitoring({ query, webhook_url: webhookUrl, refresh_interval: interval, headless })
+      const res = await startMonitoring({ query, webhook_url: webhookUrl, refresh_interval: interval, headless })
+      P(`[handleSubmit] started → session_id=${res.session_id}`)
       setQuery(''); setWebhookUrl(''); setInterval_(60)
       onStarted()
-    } catch (e: any) { setError(e.message) }
+    } catch (e: any) { P(`[handleSubmit] error → ${e.message}`); setError(e.message) }
     setLoading(false)
   }
 
@@ -121,8 +125,9 @@ function SessionCard({ session, onStopped }: { session: MonitoringSession; onSto
 
   async function handleStop() {
     setStopping(true)
-    try { await stopMonitoring(session.session_id); onStopped() }
-    catch (e: any) { alert(e.message) }
+    P(`[handleStop] stopping session_id=${session.session_id}`)
+    try { await stopMonitoring(session.session_id); P(`[handleStop] stopped → session_id=${session.session_id}`); onStopped() }
+    catch (e: any) { P(`[handleStop] error → ${e.message}`); alert(e.message) }
     setStopping(false)
   }
 
@@ -271,16 +276,17 @@ export default function MonitoringPage() {
 
   async function fetchAll() {
     setLoading(true)
+    P('[fetchAll] fetching all data...')
     const [sessRes, jobsRes, alertsRes, healthRes] = await Promise.allSettled([
       listMonitorSessions(),
       getRecentJobsDetails(20),
       getRecentAlerts(50),
       checkHealth(),
     ])
-    if (sessRes.status === 'fulfilled') setSessions(sessRes.value.sessions)
-    if (jobsRes.status === 'fulfilled') setRecentJobs(jobsRes.value.jobs)
-    if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value.alerts)
-    if (healthRes.status === 'fulfilled') setHealth(healthRes.value)
+    if (sessRes.status === 'fulfilled') { P(`[fetchAll] sessions → ${sessRes.value.sessions.length}`); setSessions(sessRes.value.sessions) }
+    if (jobsRes.status === 'fulfilled') { P(`[fetchAll] recentJobs → ${jobsRes.value.jobs.length}`); setRecentJobs(jobsRes.value.jobs) }
+    if (alertsRes.status === 'fulfilled') { P(`[fetchAll] alerts → ${alertsRes.value.alerts.length}`); setAlerts(alertsRes.value.alerts) }
+    if (healthRes.status === 'fulfilled') { P(`[fetchAll] health → ${healthRes.value.status}`); setHealth(healthRes.value) }
     setLoading(false)
   }
 
